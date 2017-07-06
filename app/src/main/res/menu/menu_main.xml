@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.lakshya.refresh.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+    <item android:id="@+id/aboutUs"
+        android:title="About Us"
+        ></item>
+
+
+    <item android:id="@+id/contactUs"
+        android:title="Contact Us"
+        ></item>
+
+    <item android:id="@+id/feedback"
+        android:title="Feedback"
+        ></item>
+</menu>
