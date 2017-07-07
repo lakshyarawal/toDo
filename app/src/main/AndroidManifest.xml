@@ -22,7 +22,8 @@
         <activity
             android:name=".ItemDetailsActiity"
             android:label="@string/title_activity_item_details_actiity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+
     </application>
 
 </manifest>

@@ -41,7 +41,7 @@
             <EditText
                 android:id="@+id/editText"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="62dp"
                 android:layout_gravity="center|bottom"
                 android:background="@color/colorPrimaryDark"
                 android:textColor="@android:color/white"
