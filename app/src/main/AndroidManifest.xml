@@ -23,7 +23,9 @@
             android:name=".ItemDetailsActiity"
             android:label="@string/title_activity_item_details_actiity"
             android:theme="@style/AppTheme.NoActionBar" />
-
+        <receiver android:name=".MyReceiver"
+            android:enabled="true"
+            android:exported="true"/>
     </application>
 
 </manifest>

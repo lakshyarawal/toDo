@@ -1,20 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="50dp">
-    <TextView
+    android:minHeight="55dp"
+    android:id="@+id/note_layout"
+    android:layout_marginTop="10dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <android.support.v7.widget.AppCompatCheckBox
+        android:id="@+id/item_check"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="false"/>
+
+    <TextView
+        android:text="test"
+        android:layout_width="0dp"
+        android:layout_weight="5"
+        android:layout_height="wrap_content"
         android:id="@+id/titleNameTextView"
-        android:textSize="24sp"
+        android:textSize="32sp"
         android:textColor="@color/colorPrimary"/>
 
 
     <TextView
         android:layout_width="0dp"
-        android:layout_weight="0.0"
+        android:layout_weight="0"
         android:layout_height="0dp"
         android:id="@+id/titleCategoryTextView"/>
 
@@ -28,4 +45,11 @@
         android:layout_weight="0"
         android:layout_height="0dp"
         android:id="@+id/dueTimeTextView"/>
+    <Button
+        android:id="@+id/remove_button"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"/>
 </LinearLayout>
+
+</android.support.v7.widget.CardView>

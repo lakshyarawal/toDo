@@ -1,17 +1,21 @@
 package com.example.lakshya.refresh;
 
 import android.app.ActionBar;
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -45,22 +49,9 @@ public class ItemDetailsActiity extends AppCompatActivity {
                 Intent i = new Intent();
                 i.putExtra("title", newTitle);
                 i.putExtra("position", position);
-                ListOpenHelper listOpenHelper = ListOpenHelper.getOpenHelperInstance(ItemDetailsActiity.this);
 
-                SQLiteDatabase database = listOpenHelper.getWritableDatabase();
 
-                ContentValues cv = new ContentValues();
-                cv.put(ListOpenHelper.LIST_TITLE, newTitle);
-                cv.put(ListOpenHelper.LIST_TYPE, newCategory);
-                cv.put(ListOpenHelper.LIST_DATE, newDate);
-                cv.put(ListOpenHelper.LIST_TIME,newTime);
-
-                if (id == -1) {
-                    database.insert(ListOpenHelper.LIST_TABLE_NAME, null, cv);
-                } else {
-                    database.update(ListOpenHelper.LIST_TABLE_NAME, cv, ListOpenHelper.LIST_ID + " =?", new String[]{String.valueOf(id)});
-                }
-
+                setReminder(newTime,newDate,newTitle);
                 Intent i1 = new Intent();
                 i1.putExtra("title", newTitle);
                 setResult(RESULT_OK, i);
@@ -117,6 +108,58 @@ public class ItemDetailsActiity extends AppCompatActivity {
             }
         });
     }
+    public void addNote(View view){
+        final ListItem note = new ListItem(titleTextView.getText().toString(),
+                                           categoryTextView.getText().toString(),
+                dateTextView.getText().toString(),timeTextView.getText().toString());
+        NoteDatabase db = NoteDatabase.getInstance(this);
+        final NoteDao dao = db.noteDao();
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                dao.insertNote(note);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                Intent result = new Intent();
+                result.putExtra("title",note.getTitle());
+                result.putExtra("type",note.type);
+                result.putExtra("date",note.dueDate);
+                result.putExtra("time",note.dueTime);
+                setResult(RESULT_OK,result);
+                ItemDetailsActiity.this.finish();
+
+            }
+        }.execute();
+
+    }
+
+    private void setReminder(String newTime, String newDate, String newTitle) {
+        String[] time=newTime.split(":");
+        String[] date=newDate.split("/");
+        PendingIntent pendingIntent;
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MONTH,(Integer.parseInt(date[1])-1));
+        calendar.set(Calendar.YEAR, Integer.parseInt(date[2]));
+        calendar.set(Calendar.DAY_OF_MONTH,Integer.parseInt(date[0]));
+
+        calendar.set(Calendar.HOUR_OF_DAY,Integer.parseInt(time[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(time[1]));
+        calendar.set(Calendar.SECOND, 0);
+        //calendar.set(Calendar.AM_PM,Calendar.PM);
+
+        Intent myIntent = new Intent(ItemDetailsActiity.this, MyReceiver.class);
+        myIntent.putExtra("title",newTitle);
+        pendingIntent = PendingIntent.getBroadcast(ItemDetailsActiity.this, 0, myIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+
+    }
+
 
     public void showDatePicker(Context context, int initialYear, int initialMonth, int initialDay) {
 

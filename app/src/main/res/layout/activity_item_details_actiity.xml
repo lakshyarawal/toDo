@@ -34,7 +34,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:textColor="@color/colorAccent"
+                android:textColor="@android:color/white"
                 android:textSize="42sp"
                 android:text="Title"/>
 
@@ -46,6 +46,7 @@
                 android:background="@color/colorPrimaryDark"
                 android:textColor="@android:color/white"
                 android:textSize="42sp"
+                android:hint=""
                 android:textColorHighlight="@color/colorAccent"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
@@ -58,6 +59,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
+        android:onClick="addNote"
         app:fabSize="normal"
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"

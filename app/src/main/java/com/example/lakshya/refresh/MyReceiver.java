@@ -15,7 +15,8 @@ public class MyReceiver extends BroadcastReceiver {
     public static int i = 0;
     @Override
     public void onReceive(Context context, Intent intent) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context).setAutoCancel(true).setSmallIcon(android.R.drawable.ic_menu_report_image).setContentTitle("JAAG JAO").setContentText("ALarm!!!");
+        String title = intent.getStringExtra("title");
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context).setAutoCancel(true).setSmallIcon(android.R.drawable.ic_menu_report_image).setContentTitle(title).setContentText("Reminder");
         Intent resultIntent = new Intent(context,MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(context,i,resultIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(resultPendingIntent);

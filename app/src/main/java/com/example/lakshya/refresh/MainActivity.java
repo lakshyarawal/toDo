@@ -7,143 +7,119 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    ListView listView;
-    listArrayAdapter listAdapter;
-    ArrayList<ListItem> itemArrayList;
-    final static  int NEW_LIST = 1;
-    PendingIntent pendingIntent;
+    RecyclerView mRecyclerView;
+    RecyclerAdapter mAdapter;
+    ArrayList<ListItem> itemArrayList = new ArrayList<>();
+    private static final int REQUEST_ADD = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        itemArrayList = new ArrayList<>();
-        listView = (ListView) findViewById(R.id.expenseListView);
-        listAdapter = new listArrayAdapter(this, itemArrayList);
-        listView.setAdapter(listAdapter);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        //toolbar.setNavigationIcon(R.drawable.ic_toolbar);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+        //toolbar.setLogo(R.drawable.ic_toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                Intent i = new Intent(MainActivity.this, ItemDetailsActiity.class);
-                startActivityForResult(i,NEW_LIST);
+                Intent add = new Intent(MainActivity.this,ItemDetailsActiity.class);
+                startActivityForResult(add,REQUEST_ADD);
                 Toast.makeText(MainActivity.this,"Enter Details Here",Toast.LENGTH_SHORT).show();
             }
         });
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        NoteDatabase db = NoteDatabase.getInstance(this);
+        final NoteDao noteDao = db.noteDao();
+        new AsyncTask<Void,Void,List<ListItem>>(){
+
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-                Intent i = new Intent(MainActivity.this, ItemDetailsActiity.class);
-                i.putExtra("id", itemArrayList.get(position).id);
-                i.putExtra("title", itemArrayList.get(position).title);
-                i.putExtra("type", itemArrayList.get(position).type);
-                i.putExtra("date", itemArrayList.get(position).dueDate);
-                i.putExtra("time",itemArrayList.get(position).dueTime);
-                i.putExtra("requestCode", 1);
-                startActivityForResult(i, 1);
+            protected List<ListItem> doInBackground(Void... voids) {
+                return noteDao.getAllNotes();
+            }
+
+            @Override
+            protected void onPostExecute(List<ListItem> notes) {
+                itemArrayList.clear();
+                itemArrayList.addAll(notes);
+                mAdapter.notifyDataSetChanged();
+            }
+        }.execute();
+
+        mRecyclerView = (RecyclerView)findViewById(R.id.recycler_view);
+
+        mAdapter = new RecyclerAdapter(this, itemArrayList, new RecyclerAdapter.NotesClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                ListItem note = itemArrayList.get(position);
+                Snackbar.make(mRecyclerView,note.getTitle(),Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onRemoveClicked(int position) {
+                itemArrayList.remove(position);
+                mAdapter.notifyItemRemoved(position);
             }
         });
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP|ItemTouchHelper.DOWN,ItemTouchHelper.RIGHT) {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                final int id1 = itemArrayList.get(position).id;
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Delete");
-                builder.setCancelable(false);
-                View v = getLayoutInflater().inflate(R.layout.dialog_view2, null);
-                final TextView tv = (TextView) v.findViewById(R.id.dialogTextView);
-                tv.setText("Are you sure you want to delete ??");
-                builder.setView(v);
-
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        itemArrayList.remove(position);
-                        ListOpenHelper expenseOpenHelper = new ListOpenHelper(MainActivity.this);
-                        SQLiteDatabase database = expenseOpenHelper.getWritableDatabase();
-                        database.delete(ListOpenHelper.LIST_TABLE_NAME, ListOpenHelper.LIST_ID + "=" + id1, null);
-                        listAdapter.notifyDataSetChanged();
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                int from = viewHolder.getAdapterPosition();
+                int to = target.getAdapterPosition();
+                Collections.swap(itemArrayList,from,to);
+                mAdapter.notifyItemMoved(from,to);
                 return true;
             }
-        });
 
-        updateItemArrayList();
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set(Calendar.MONTH, 5);
-        calendar.set(Calendar.YEAR, 2017);
-        calendar.set(Calendar.DAY_OF_MONTH,7);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 5);
-        calendar.set(Calendar.MINUTE, 43);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.AM_PM,Calendar.PM);
-
-        Intent myIntent = new Intent(MainActivity.this, MyReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myIntent,PendingIntent.FLAG_UPDATE_CURRENT);
-
-        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-
-    }
-    private void updateItemArrayList() {
-        ListOpenHelper listOpenHelper = ListOpenHelper.getOpenHelperInstance(this);
-        itemArrayList.clear();
-        SQLiteDatabase database = listOpenHelper.getReadableDatabase();
-        Cursor cursor = database.query(ListOpenHelper.LIST_TABLE_NAME,null,null,null,null, null, null);
-        while(cursor.moveToNext()){
-
-            String title = cursor.getString(cursor.getColumnIndex(ListOpenHelper.LIST_TITLE));
-            String date = cursor.getString(cursor.getColumnIndex(ListOpenHelper.LIST_DATE));
-            String time = cursor.getString(cursor.getColumnIndex(ListOpenHelper.LIST_TIME));
-            int id = cursor.getInt(cursor.getColumnIndex(ListOpenHelper.LIST_ID));
-            String type = cursor.getString(cursor.getColumnIndex(ListOpenHelper.LIST_TYPE));
-            ListItem e = new ListItem(id, title,type,date,time);
-            itemArrayList.add(e);
-        }
-
-        listAdapter.notifyDataSetChanged();
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 1) {
-            if (resultCode == RESULT_OK) {
-                updateItemArrayList();
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                itemArrayList.remove(position);
+                mAdapter.notifyItemRemoved(position);
             }
-        }
+        });
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
     }
+
+
+
 
 
     @Override
@@ -191,4 +167,19 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_ADD && resultCode == RESULT_OK){
+            String title = data.getStringExtra("title");
+            String type = data.getStringExtra("type");
+            String date = data.getStringExtra("date");
+            String time = data.getStringExtra("time");
+            ListItem note = new ListItem(title,type,date,time);
+            int size = itemArrayList.size();
+            itemArrayList.add(note);
+            mAdapter.notifyItemInserted(size);
+        }
+    }
 }
